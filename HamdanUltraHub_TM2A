@@ -1,0 +1,93 @@
+-- Hamdan Elite ESP TM2A by ChatGPT ❤️
+
+local players = game:GetService("Players")
+local collectionService = game:GetService("CollectionService")
+local localPlayer = players.LocalPlayer or players:GetPlayers()[1]
+
+local eggChances = {
+    ["Common Egg"] = {["Dog"] = 33.33, ["Bunny"] = 33.33, ["Golden Lab"] = 33.33},
+    ["Dinosaur Egg"] = {
+        ["Raptor"] = 35, ["Triceratops"] = 32.5, ["Stegosaurus"] = 28,
+        ["Pterodactyl"] = 3, ["Brontosaurus"] = 1, ["T-Rex"] = 0.5
+    },
+    ["Bee Egg"] = {
+        ["Bee"] = 65, ["Honey Bee"] = 25, ["Bear Bee"] = 5,
+        ["Petal Bee"] = 4, ["Queen Bee"] = 1
+    },
+    ["Bug Egg"] = {
+        ["Caterpillar"] = 40, ["Snail"] = 30, ["Giant Ant"] = 25,
+        ["Preying Mantis"] = 4, ["Dragonfly"] = 1
+    },
+    ["Mythical Egg"] = {
+        ["Grey Mouse"] = 36, ["Brown Mouse"] = 27, ["Squirrel"] = 27,
+        ["Red Giant Ant"] = 8.5, ["Red Fox"] = 1.5
+    },
+    ["Night Egg"] = {
+        ["Hedgehog"] = 49, ["Mole"] = 22, ["Frog"] = 14,
+        ["Echo Frog"] = 10, ["Night Owl"] = 4, ["Raccoon"] = 1
+    },
+    ["Anti Bee Egg"] = {
+        ["Wasp"] = 55, ["Tarantula Hawk"] = 30, ["Moth"] = 13.75,
+        ["Butterfly"] = 1, ["Disco Bee"] = 0.25
+    },
+    ["Premium Primal Egg"] = {
+        ["Parasaurolophus"] = 42.55, ["Iguanodon"] = 42.55,
+        ["Dilophosaurus"] = 20, ["Ankylosaurus"] = 1, ["Spinosaurus"] = 0.5
+    },
+    ["Rare Summer Egg"] = {
+        ["Flamingo"] = 30, ["Toucan"] = 25, ["Sea Turtle"] = 20,
+        ["Orang utan"] = 15, ["Seal"] = 10
+    }
+}
+
+local function weightedRandom(options)
+    local totalWeight = 0
+    for _, chance in pairs(options) do
+        totalWeight += chance
+    end
+    local roll = math.random() * totalWeight
+    local cumulative = 0
+    for pet, chance in pairs(options) do
+        cumulative += chance
+        if roll <= cumulative then
+            return pet
+        end
+    end
+    return next(options)
+end
+
+local function createESP(egg, petName)
+    local billboard = Instance.new("BillboardGui")
+    billboard.Adornee = egg:FindFirstChildWhichIsA("BasePart") or egg.PrimaryPart
+    billboard.Size = UDim2.new(0, 200, 0, 50)
+    billboard.StudsOffset = Vector3.new(0, 2.5, 0)
+    billboard.AlwaysOnTop = true
+
+    local label = Instance.new("TextLabel")
+    label.Size = UDim2.new(1, 0, 1, 0)
+    label.BackgroundTransparency = 1
+    label.Text = petName
+    label.TextColor3 = Color3.new(1, 1, 1)
+    label.TextStrokeTransparency = 0
+    label.TextScaled = true
+    label.Font = Enum.Font.SourceSansBold
+    label.Parent = billboard
+
+    billboard.Parent = egg
+end
+
+for _, egg in collectionService:GetTagged("PetEggServer") do
+    local eggName = egg:GetAttribute("EggName")
+    if eggName and eggChances[eggName] then
+        local petName = weightedRandom(eggChances[eggName])
+        createESP(egg, eggName .. " | " .. petName)
+    end
+end
+
+collectionService:GetInstanceAddedSignal("PetEggServer"):Connect(function(egg)
+    local eggName = egg:GetAttribute("EggName")
+    if eggName and eggChances[eggName] then
+        local petName = weightedRandom(eggChances[eggName])
+        createESP(egg, eggName .. " | " .. petName)
+    end
+end)
